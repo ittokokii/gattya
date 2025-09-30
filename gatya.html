@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>単語ガチャ</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #161925;
+      --accent: #85d1ff;
+      --text: #e8eef5;
+      --muted: #9fb3c8;
+      --danger: #ff7a7a;
+    }
+    body { margin: 0; font-family: sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { width: min(600px, 94vw); margin: 20px auto; }
+    .card { background: var(--panel); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .btn { border: none; border-radius: 12px; padding: 12px 16px; font-size: 18px; font-weight: bold; cursor: pointer; }
+    .btn.main { background: var(--accent); color: #111; }
+    .btn.reset { background: var(--danger); color: #111; margin-left: 8px; }
+    .big { font-size: 28px; text-align: center; padding: 20px; background:#0c1320; border-radius: 12px; margin: 10px 0; }
+    ul { list-style: none; padding: 0; margin: 0; }
+    li { padding: 6px 0; border-bottom: 1px solid #2c3344; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="card">
+      <h2>🎲 単語ガチャ</h2>
+      <div id="result" class="big">受け止めよ</div>
+      <button id="btnRoll" class="btn main">言の葉を得る</button>
+      <button id="btnReset" class="btn reset">新たに紡ぐ</button>
+    </section>
+
+    <section class="card">
+      <h3>履歴</h3>
+      <ul id="history"></ul>
+    </section>
+  </div>
+
+  <script>
+    // ===================== ガチャ単語設定 =====================
+    const defaultWords = [
+      "コーヒー","花びら","星空","猫","夕焼け","さざ波","涙","雪","雨","おはよう",
+      "夢","風","月","太陽","時計","囁き","笑ってる","泣いてる","とんぼ","虹","蟻","雑草",
+      "喧噪","静寂","反逆","狼煙","光","影","なあ、そうだろ？","今日も","心の","いつまでも",
+      "流星","桜","ビル",
+    ];
+
+    let pool = [];
+    let history = [];
+
+    function buildWeighted(items) {
+      const arr = [];
+      for (const line of items) {
+        const m = line.match(/^(.*?)(?:\|(\d+))?$/);
+        if (!m) continue;
+        const w = m[1].trim();
+        const wt = Math.max(1, parseInt(m[2] || '1', 10));
+        for (let i=0; i<wt; i++) arr.push(w);
+      }
+      return arr;
+    }
+
+    function initPool() {
+      pool = buildWeighted(defaultWords);
+    }
+
+    function draw() {
+      if (pool.length === 0) initPool();
+      const pick = pool[Math.floor(Math.random()*pool.length)];
+      document.getElementById('result').textContent = pick;
+      history.unshift(pick);
+      updateHistory();
+      // 抽選された単語を一時的にプールから除外
+      pool = pool.filter(w => w !== pick);
+    }
+
+    function updateHistory() {
+      const ul = document.getElementById('history');
+      ul.innerHTML = '';
+      history.forEach(h => {
+        const li = document.createElement('li');
+        li.textContent = h;
+        ul.appendChild(li);
+      });
+    }
+
+    function reset() {
+      // リセット時：プールを初期状態に戻す（出た単語も復活）
+      initPool();
+      document.getElementById('result').textContent = 'ここに結果';
+      history = []; // 履歴もリセット
+      updateHistory(); // 履歴表示もリセット
+    }
+
+    document.getElementById('btnRoll').addEventListener('click', draw);
+    document.getElementById('btnReset').addEventListener('click', reset);
+
+    // 初期化
+    initPool();
+  </script>
+</body>
+</html>
